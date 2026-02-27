@@ -44,10 +44,10 @@ function TraceSection({ steps }) {
               <div className="text-xs text-gray-600 dark:text-gray-400 leading-snug">{step.text || step.step}</div>
               {step.type && (
                 <span className={`inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] leading-none ${step.type === 'prompt' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                    step.type === 'response' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                      step.type === 'sql' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
-                        step.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                          'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  step.type === 'response' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                    step.type === 'sql' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                      step.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                        'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                   }`}>
                   {step.type}
                 </span>
@@ -88,7 +88,7 @@ function TraceSection({ steps }) {
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user'
-  const [viewerImage, setViewerImage] = useState(null)
+  const [viewerIndex, setViewerIndex] = useState(null)
   const [showTrace, setShowTrace] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -113,8 +113,8 @@ export default function ChatMessage({ message }) {
     <div className={`flex gap-3 ${isUser ? 'message-user' : 'message-assistant'}`}>
       {/* Avatar */}
       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser
-          ? 'bg-primary-700 text-white'
-          : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+        ? 'bg-primary-700 text-white'
+        : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
         }`}>
         {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
       </div>
@@ -171,7 +171,7 @@ export default function ChatMessage({ message }) {
                     key={idx}
                     className="group relative rounded-lg overflow-hidden bg-white border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                     style={{ width: visualizations.length === 1 ? 'clamp(160px, 50%, 360px)' : 'clamp(140px, 45%, 280px)' }}
-                    onClick={() => setViewerImage(imgSrc)}
+                    onClick={() => setViewerIndex(idx)}
                   >
                     <img
                       src={imgSrc}
@@ -201,11 +201,13 @@ export default function ChatMessage({ message }) {
       </div>
 
       {/* Full-screen image viewer */}
-      {viewerImage && (
+      {viewerIndex !== null && (
         <ImageViewer
-          src={viewerImage}
+          images={visualizations.map(v => `data:image/png;base64,${v}`)}
+          currentIndex={viewerIndex}
+          onNavigate={setViewerIndex}
           alt="Chart"
-          onClose={() => setViewerImage(null)}
+          onClose={() => setViewerIndex(null)}
         />
       )}
     </div>

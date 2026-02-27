@@ -24,6 +24,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 import statsmodels.api as sm
@@ -33,7 +34,12 @@ import textwrap
 from collections import Counter, defaultdict
 
 # --- Data injected by the executor ---
-DATA = {data_json}
+_RAW_DATA = {data_json}
+# Auto-convert list-of-dicts entries to DataFrames so LLM code can use column-name indexing
+DATA = {
+    k: pd.DataFrame(v) if isinstance(v, list) and v and isinstance(v[0], dict) else v
+    for k, v in _RAW_DATA.items()
+}
 
 # Styling defaults
 plt.rcParams.update({

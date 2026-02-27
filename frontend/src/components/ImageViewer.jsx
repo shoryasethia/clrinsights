@@ -1,7 +1,12 @@
-import { useState, useRef, useCallback } from 'react'
-import { X, ZoomIn, ZoomOut, RotateCcw, Download, Copy, Check } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { X, ZoomIn, ZoomOut, RotateCcw, Download, Copy, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 
-export default function ImageViewer({ src, alt, onClose }) {
+export default function ImageViewer({ images, currentIndex, onNavigate, alt, onClose }) {
+  // Support legacy single-image usage: src prop
+  const imgList = images && images.length > 0 ? images : []
+  const idx = currentIndex ?? 0
+  const src = imgList[idx]
+
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
@@ -9,9 +14,30 @@ export default function ImageViewer({ src, alt, onClose }) {
   const [copied, setCopied] = useState(false)
   const imgRef = useRef(null)
 
+  const hasPrev = idx > 0
+  const hasNext = idx < imgList.length - 1
+
+  // Reset zoom/pan when navigating
+  const resetView = () => { setScale(1); setPosition({ x: 0, y: 0 }) }
+
+  const goTo = (newIdx) => {
+    resetView()
+    onNavigate && onNavigate(newIdx)
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowLeft' && hasPrev) goTo(idx - 1)
+      if (e.key === 'ArrowRight' && hasNext) goTo(idx + 1)
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [idx, hasPrev, hasNext])
+
   const zoomIn = () => setScale(s => Math.min(s + 0.25, 5))
   const zoomOut = () => setScale(s => Math.max(s - 0.25, 0.25))
-  const resetView = () => { setScale(1); setPosition({ x: 0, y: 0 }) }
 
   const handleWheel = useCallback((e) => {
     e.preventDefault()
@@ -49,12 +75,11 @@ export default function ImageViewer({ src, alt, onClose }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback: copy as data URL
       try {
         await navigator.clipboard.writeText(src)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      } catch {}
+      } catch { }
     }
   }
 
@@ -91,11 +116,41 @@ export default function ImageViewer({ src, alt, onClose }) {
         <button onClick={handleCopy} className="p-2 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors" title="Copy image">
           {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
         </button>
+        {imgList.length > 1 && (
+          <>
+            <div className="w-px h-6 bg-gray-700 mx-1" />
+            <span className="text-gray-400 text-sm px-2 select-none whitespace-nowrap">
+              {idx + 1} / {imgList.length}
+            </span>
+          </>
+        )}
         <div className="w-px h-6 bg-gray-700 mx-1" />
         <button onClick={onClose} className="p-2 hover:bg-red-900/50 rounded-lg text-gray-300 hover:text-red-400 transition-colors" title="Close">
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Left arrow */}
+      {hasPrev && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goTo(idx - 1) }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/80 border border-gray-600 hover:border-gray-400 rounded-full text-white transition-all shadow-2xl"
+          title="Previous image (←)"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+      )}
+
+      {/* Right arrow */}
+      {hasNext && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goTo(idx + 1) }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/80 border border-gray-600 hover:border-gray-400 rounded-full text-white transition-all shadow-2xl"
+          title="Next image (→)"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Image */}
       <div
@@ -111,7 +166,7 @@ export default function ImageViewer({ src, alt, onClose }) {
           ref={imgRef}
           src={src}
           alt={alt}
-          className="max-w-[90vw] max-h-[85vh] rounded-lg shadow-2xl pointer-events-none"
+          className="max-w-[80vw] max-h-[80vh] rounded-lg shadow-2xl pointer-events-none"
           draggable={false}
         />
       </div>
