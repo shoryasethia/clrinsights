@@ -394,12 +394,13 @@ async def generate_visualizations_node(state: AgentState) -> AgentState:
         var_name = f"step_{i+1}"
         data_payload[var_name] = step_results
         
-        data_summary.append(f"\nDATA['{var_name}'] — {step_desc}")
+        data_summary.append(f"\nDATA['{var_name}'] — {step_desc} (pandas DataFrame)")
         data_summary.append(f"  SQL: {step_sql}")
         data_summary.append(f"  Rows: {len(step_results)}")
         if step_results:
             cols = list(step_results[0].keys())
             data_summary.append(f"  Columns: {cols}")
+            data_summary.append(f"  Access: DATA['{var_name}']['col_name'] or DATA['{var_name}'].iloc[0]['col_name'] for single row")
             # Show value ranges so the LLM can detect scale mismatches
             for col in cols:
                 vals = [r[col] for r in step_results if isinstance(r.get(col), (int, float))]
@@ -420,7 +421,16 @@ WHEN TO VISUALIZE (mandatory — always create a chart for these):
 - Comparisons across 3+ items → Bar chart
 - Weekday vs Weekend or before/after comparisons → Grouped bar chart
 - Top-N / Bottom-N rankings → Horizontal bar chart
-Only skip visualization when the result is a single scalar value (one number, one row with one column).
+Only skip visualization when the result is a single scalar value (one number, one row with one column). A result with one row but multiple columns (e.g., one transaction type's stats) CAN be visualized as a single-bar or gauge-style chart.
+
+DATA FORMAT (CRITICAL):
+- DATA['step_1'], DATA['step_2'], etc. are **pandas DataFrames** (NOT lists or dicts).
+- Column access: DATA['step_1']['col_name']  → correct
+- Single-row value: DATA['step_1']['col_name'].iloc[0]  → correct
+- NEVER use DATA['step_1'][0] — integer indexing is a KeyError on DataFrames. Use .iloc[0] instead.
+- Iterate rows: for _, row in DATA['step_1'].iterrows(): ...
+- Convert column to list: DATA['step_1']['col_name'].tolist()
+- Sort: DATA['step_1'].sort_values('col', ascending=False)
 
 RULES:
 1. You receive query results in a `DATA` dict. Access data via DATA['step_1'], DATA['step_2'], etc.
@@ -439,8 +449,7 @@ RULES:
     - Days: Mon → Tue → Wed → Thu → Fri → Sat → Sun
     - Risk levels: Low → Medium → High → Critical
     - Frequency: Rarely → Sometimes → Often → Always
-    To enforce this, define the correct order list and reindex/sort your data accordingly BEFORE plotting.
-    Example: `order = ['Low', 'Medium', 'High']; data_sorted = sorted(data, key=lambda x: order.index(x['bucket']))`
+    To enforce this, define the correct order list and use df.set_index('col').reindex(order).reset_index() BEFORE plotting.
 11. For grouped comparisons (e.g., weekday vs weekend per state), use grouped bars with a legend — never separate figures for each group.
 
 SCALE RULES (CRITICAL — follow these strictly):
@@ -456,16 +465,18 @@ AVAILABLE (already imported — do NOT re-import these):
 - matplotlib.pyplot as plt
 - matplotlib.ticker as ticker
 - numpy as np
+- pandas as pd
 - scipy.stats as stats
 - seaborn as sns
 - statsmodels.api as sm
 - math, datetime, textwrap
 - collections.Counter, collections.defaultdict
-- DATA dict with your query results
+- DATA dict with your query results (each value is a pandas DataFrame)
 
 FORBIDDEN:
 - NEVER call plt.show() — figures are captured automatically.
 - NEVER import matplotlib, numpy, scipy, pandas, seaborn, statsmodels, or any other library — they are pre-imported.
+- NEVER index a DataFrame with an integer like df[0] — use df.iloc[0] for row access.
 
 COLOR PALETTE: '#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D01', '#46BDC6', '#7B61FF'
 
@@ -483,9 +494,11 @@ Write matplotlib code to visualize this data appropriately. Decide how many char
         client = get_llm_client(state.get('provider', 'groq'))
         response = await client.generate(prompt, system_prompt)
         
-        # Clean the code
+        # Clean the code — strip any markdown fence variant (```python, ```py, ```, etc.)
         code = response.strip()
-        code = code.removeprefix('```python').removeprefix('```').removesuffix('```').strip()
+        code = re.sub(r'^```[\w]*\s*', '', code)   # opening fence
+        code = re.sub(r'\s*```$', '', code)         # closing fence
+        code = code.strip()
         # Strip plt.show() calls and redundant imports that crash the headless backend
         code = re.sub(r'^\s*plt\.show\(\)\s*$', '', code, flags=re.MULTILINE)
         code = re.sub(r'^\s*import\s+matplotlib.*$', '', code, flags=re.MULTILINE)
@@ -530,15 +543,23 @@ Write matplotlib code to visualize this data appropriately. Decide how many char
             })
             
             # Build data shape info for the LLM
+            # data_payload values are raw lists-of-dicts; be defensive in case they aren't
             data_shape = {}
             for k, v in data_payload.items():
-                if v:
-                    data_shape[k] = {
-                        'columns': list(v[0].keys()),
-                        'sample_row': v[0],
-                        'num_rows': len(v)
-                    }
-                else:
+                try:
+                    import pandas as _pd
+                    if isinstance(v, _pd.DataFrame):
+                        cols = list(v.columns)
+                        sample = v.head(1).to_dict(orient='records')[0] if not v.empty else {}
+                        num_rows = len(v)
+                    elif isinstance(v, list) and v and isinstance(v[0], dict):
+                        cols = list(v[0].keys())
+                        sample = v[0]
+                        num_rows = len(v)
+                    else:
+                        cols, sample, num_rows = [], {}, 0
+                    data_shape[k] = {'columns': cols, 'sample_row': sample, 'num_rows': num_rows}
+                except Exception:
                     data_shape[k] = {'columns': [], 'sample_row': {}, 'num_rows': 0}
             
             fix_prompt = f"""The following matplotlib code failed with an error. Fix it.
@@ -560,7 +581,11 @@ RULES:
 Return ONLY the fixed Python code. No markdown, no explanation."""
             
             fixed_response = await client.generate(fix_prompt, system_prompt)
-            fixed_code = fixed_response.strip().removeprefix('```python').removeprefix('```').removesuffix('```').strip()
+            # Strip fence variants from fixed code too
+            fixed_code = fixed_response.strip()
+            fixed_code = re.sub(r'^```[\w]*\s*', '', fixed_code)
+            fixed_code = re.sub(r'\s*```$', '', fixed_code)
+            fixed_code = fixed_code.strip()
             # Strip imports from fix too
             fixed_code = re.sub(r'^\s*import\s+\w.*$', '', fixed_code, flags=re.MULTILINE)
             fixed_code = re.sub(r'^\s*from\s+\w.*$', '', fixed_code, flags=re.MULTILINE)
