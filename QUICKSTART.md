@@ -21,7 +21,7 @@ GROQ_API_KEY=your_groq_key_here
 
 ```bash
 cd clrinsights
-python -m clrinsights.main
+python -m main
 ```
 
 Backend runs at: http://localhost:8000
@@ -33,7 +33,7 @@ Open `clrinsights/frontend/index.html` in browser
 Or serve it:
 ```bash
 cd clrinsights/frontend
-python -m http.server 3000
+npm run dev
 ```
 
 Then visit: http://localhost:3000
