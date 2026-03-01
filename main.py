@@ -1,3 +1,11 @@
+import sys
+import os
+from pathlib import Path
+
+# Add the parent directory to sys.path so 'clrinsights' module can be imported
+# This allows running `python -m main` directly from the clrinsights folder
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import uuid
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

@@ -26,6 +26,7 @@ function App() {
   const messagesEndRef = useRef(null)
   const [backendWaking, setBackendWaking] = useState(false)
   const [wakingSecs, setWakingSecs] = useState(0)
+  const [appInitializing, setAppInitializing] = useState(true)
   const wakeTimerRef = useRef(null)
   const wakeIntervalRef = useRef(null)
 
@@ -53,7 +54,7 @@ function App() {
       wakeIntervalRef.current = setInterval(() => {
         setWakingSecs(s => s + 1)
       }, 1000)
-    }, 30000)
+    }, 2000)
   }
 
   const stopWakeDetector = () => {
@@ -65,7 +66,10 @@ function App() {
 
   // Load sessions from backend on mount
   useEffect(() => {
-    const loadSessions = async () => {
+    const initApp = async () => {
+      // Immediate ping to wake up the backend as fast as possible
+      fetch(apiUrl('/health')).catch(() => { })
+
       startWakeDetector()
       try {
         const res = await fetch(apiUrl('/api/sessions'))
@@ -79,9 +83,11 @@ function App() {
       } catch (e) {
         stopWakeDetector()
         // Backend might not be running yet, ignore
+      } finally {
+        setAppInitializing(false)
       }
     }
-    loadSessions()
+    initApp()
   }, [])
 
   const handleNewSession = () => {
@@ -239,6 +245,42 @@ function App() {
       e.preventDefault()
       sendMessage()
     }
+  }
+
+  if (appInitializing) {
+    return (
+      <div className="h-screen w-screen bg-gray-100 dark:bg-[#0f0f0f] flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center max-w-sm text-center">
+          <img src="/clrinsights-logo.png" alt="CLRInsights" className="h-16 w-auto rounded-xl mb-8 animate-pulse shadow-sm" />
+
+          <div className="flex gap-2 mb-6">
+            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce"></div>
+            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            Loading CLRInsights...
+          </h2>
+
+          {backendWaking && (
+            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-300 w-full animate-in fade-in slide-in-from-bottom-4 transition-all duration-300">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="relative flex-shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping absolute" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                </div>
+                <span className="font-semibold text-sm">Waking up backend server</span>
+                <span className="ml-auto font-mono text-xs font-bold">{wakingSecs}s</span>
+              </div>
+              <p className="text-xs text-amber-700/80 dark:text-amber-400/80 text-left">
+                The free tier sleeps after 15 minutes of inactivity. Please wait ~50 seconds for it to start.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (

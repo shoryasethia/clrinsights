@@ -19,6 +19,15 @@ GROQ_API_KEY=your_groq_key_here
 
 ## 3. Start Backend
 
+You can start the backend using either Uvicorn (recommended for development) or Python directly:
+
+**Option A (Uvicorn with hot-reload):**
+```bash
+cd ..
+uvicorn clrinsights.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Option B (Python directly):**
 ```bash
 cd clrinsights
 python -m main
@@ -28,9 +37,6 @@ Backend runs at: http://localhost:8000
 
 ## 4. Open Frontend
 
-Open `clrinsights/frontend/index.html` in browser
-
-Or serve it:
 ```bash
 cd clrinsights/frontend
 npm run dev
@@ -38,12 +44,6 @@ npm run dev
 
 Then visit: http://localhost:3000
 
-## 5. Test Queries
-
-Try asking:
-- "What is the failure rate for each transaction type?"
-- "Show me transaction trends by hour of day"
-- "Which state has the most transactions?"
 
 ## Project Structure
 

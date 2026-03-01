@@ -97,8 +97,10 @@ Edit `.env` (copy from `.env.example`) and configure:
 
 **Terminal 1 - Start Backend:**
 
-Navigate to `clrinsights` directory and run:
+You can start the backend using either Uvicorn (recommended for development) or Python directly.
 
+**Option A (Uvicorn with hot-reload):**
+From the repository root (parent of `clrinsights`):
 ```powershell
 # Windows PowerShell
 .venv\Scripts\activate
@@ -109,8 +111,16 @@ uvicorn clrinsights.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 # Linux/Mac
 source .venv/bin/activate
-cd ..
+cd .. 
 uvicorn clrinsights.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Option B (Python directly):**
+From inside the `clrinsights` directory:
+```bash
+# Windows / Linux / Mac
+cd clrinsights
+python -m main
 ```
 
 **Terminal 2 - Start Frontend:**
