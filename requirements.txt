@@ -1,5 +1,8 @@
 fastapi
 uvicorn[standard]
+motor
+pymongo[srv]
+certifi
 langgraph
 langchain
 langchain-core

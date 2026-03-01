@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: clrinsights-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn clrinsights.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_FALLBACK_MODEL
+        value: gemini-2.5-flash
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_FALLBACK_MODEL
+        value: llama-3.1-8b-instant
+      - key: CSV_PATH
+        value: data/upi_transactions_2024.csv
+      - key: SCHEMA_PATH
+        value: schema.json
+      - key: CODE_TIMEOUT_SECONDS
+        value: 30
+      - key: MAX_MEMORY_MB
+        value: 512
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: 8000
+      - key: CORS_ORIGINS
+        value: '["https://clrinsights.vercel.app","https://*.vercel.app"]'
+      - key: MAX_CONVERSATION_HISTORY
+        value: 20
+      - key: CONTEXT_WINDOW_SIZE
+        value: 4000
+      - key: DEFAULT_TEMPERATURE
+        value: 0.1
+      - key: MAX_RETRIES
+        value: 3
+      - key: REQUEST_TIMEOUT
+        value: 60

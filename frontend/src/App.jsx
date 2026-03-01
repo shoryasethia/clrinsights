@@ -4,6 +4,7 @@ import ChatMessage from './components/ChatMessage'
 import InputArea from './components/InputArea'
 import Settings from './components/Settings'
 import SessionPanel from './components/SessionPanel'
+import { apiUrl } from './api'
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -45,7 +46,7 @@ function App() {
   useEffect(() => {
     const loadSessions = async () => {
       try {
-        const res = await fetch('/api/sessions')
+        const res = await fetch(apiUrl('/api/sessions'))
         if (res.ok) {
           const data = await res.json()
           if (data.sessions && data.sessions.length > 0) {
@@ -74,7 +75,7 @@ function App() {
     setSessionId(id)
     // Load messages from backend
     try {
-      const res = await fetch(`/api/sessions/${id}/history`)
+      const res = await fetch(apiUrl(`/api/sessions/${id}/history`))
       if (res.ok) {
         const data = await res.json()
         setMessages(data.messages || [])
@@ -90,7 +91,7 @@ function App() {
   const handleDeleteSession = async (id) => {
     // Delete from backend (removes folder)
     try {
-      await fetch(`/api/sessions/${id}`, { method: 'DELETE' })
+      await fetch(apiUrl(`/api/sessions/${id}`), { method: 'DELETE' })
     } catch (err) {
       console.error('[Sessions] Failed to delete session:', err)
     }
@@ -111,7 +112,7 @@ function App() {
     setRenamedSessions(prev => new Set(prev).add(id))
     // Persist to backend
     try {
-      await fetch(`/api/sessions/${id}/title`, {
+      await fetch(apiUrl(`/api/sessions/${id}/title`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle })
@@ -136,7 +137,7 @@ function App() {
       setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title } : s))
       // Persist but don't mark as user-renamed
       try {
-        await fetch(`/api/sessions/${sessionId}/title`, {
+        await fetch(apiUrl(`/api/sessions/${sessionId}/title`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title })
@@ -147,7 +148,7 @@ function App() {
     }
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

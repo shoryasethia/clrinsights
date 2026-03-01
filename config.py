@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # API Keys
     gemini_api_key: str = Field(..., description="Google Gemini API key")
     groq_api_key: str = Field(..., description="Groq API key")
+
+    # MongoDB
+    mongodb_uri: str = Field(..., description="MongoDB Atlas connection URI")
     
     # Model Configuration
     gemini_model: str = Field(..., description="Primary Gemini model name")

@@ -1,5 +1,6 @@
 import { X, Settings as SettingsIcon, Check, Eye, EyeOff, Key } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { apiUrl } from '../api'
 
 function ApiKeyInput({ provider, label, maskedKey, onSaved }) {
   const [editing, setEditing] = useState(false)
@@ -12,7 +13,7 @@ function ApiKeyInput({ provider, label, maskedKey, onSaved }) {
     if (!value.trim()) return
     setSaving(true)
     try {
-      const res = await fetch('/api/settings/keys', {
+      const res = await fetch(apiUrl('/api/settings/keys'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider, key: value.trim() })
@@ -22,7 +23,7 @@ function ApiKeyInput({ provider, label, maskedKey, onSaved }) {
         setTimeout(() => { setSaved(false); setEditing(false); setValue('') }, 1500)
         onSaved?.()
       }
-    } catch {}
+    } catch { }
     setSaving(false)
   }
 
@@ -86,7 +87,7 @@ export default function Settings({ isOpen, onClose, settings, onSettingsChange }
 
   const loadKeys = async () => {
     try {
-      const res = await fetch('/api/settings/keys')
+      const res = await fetch(apiUrl('/api/settings/keys'))
       if (res.ok) {
         const data = await res.json()
         setMaskedKeys(data)
@@ -137,11 +138,10 @@ export default function Settings({ isOpen, onClose, settings, onSettingsChange }
               {/* Gemini Option */}
               <div
                 onClick={() => handleProviderChange('gemini')}
-                className={`w-full p-3 rounded-lg border-2 transition-colors cursor-pointer ${
-                  settings.provider === 'gemini'
+                className={`w-full p-3 rounded-lg border-2 transition-colors cursor-pointer ${settings.provider === 'gemini'
                     ? 'border-primary-600 bg-primary-50 dark:bg-[#222]'
                     : 'border-gray-200 dark:border-gray-900 hover:border-gray-300 dark:hover:border-gray-800'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -163,11 +163,10 @@ export default function Settings({ isOpen, onClose, settings, onSettingsChange }
               {/* Groq Option */}
               <div
                 onClick={() => handleProviderChange('groq')}
-                className={`w-full p-3 rounded-lg border-2 transition-colors cursor-pointer ${
-                  settings.provider === 'groq'
+                className={`w-full p-3 rounded-lg border-2 transition-colors cursor-pointer ${settings.provider === 'groq'
                     ? 'border-primary-600 bg-primary-50 dark:bg-[#222]'
                     : 'border-gray-200 dark:border-gray-900 hover:border-gray-300 dark:hover:border-gray-800'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

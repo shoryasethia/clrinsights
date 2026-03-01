@@ -59,10 +59,10 @@ async def chat(request: ChatRequest):
     """
     # Get or create session
     session_id = request.session_id or str(uuid.uuid4())
-    history = get_or_create_session(session_id)
+    history = await get_or_create_session(session_id)
     
     # Add user message to history
-    history.add_message("user", request.query)
+    await history.add_message("user", request.query)
     
     try:
         # Run agent
@@ -100,7 +100,7 @@ async def chat(request: ChatRequest):
         
         # Add assistant response to history (with visualizations + trace)
         if result['answer']:
-            history.add_message(
+            await history.add_message(
                 "assistant",
                 result['answer'],
                 visualizations=result.get('visualizations', []),
@@ -110,7 +110,7 @@ async def chat(request: ChatRequest):
             )
         
         # Auto-save trace, visualizations, and response to session folder
-        history.save_response(result)
+        await history.save_response(result)
         
         return ChatResponse(
             answer=result['answer'],
@@ -153,13 +153,13 @@ async def chat(request: ChatRequest):
 @app.get("/sessions")
 async def get_sessions():
     """List all saved sessions."""
-    return {"sessions": list_all_sessions()}
+    return {"sessions": await list_all_sessions()}
 
 
 @app.get("/sessions/{session_id}/history")
 async def get_session_history(session_id: str):
     """Get conversation history for session."""
-    history = get_or_create_session(session_id)
+    history = await get_or_create_session(session_id)
     return {"messages": history.get_messages()}
 
 
@@ -167,15 +167,15 @@ async def get_session_history(session_id: str):
 async def rename_session(session_id: str, body: dict):
     """Rename a session."""
     title = body.get("title", "Untitled")
-    history = get_or_create_session(session_id)
-    history.set_title(title)
+    history = await get_or_create_session(session_id)
+    await history.set_title(title)
     return {"status": "renamed", "title": title}
 
 
 @app.delete("/sessions/{session_id}")
 async def clear_session(session_id: str):
     """Delete session and its folder entirely."""
-    delete_session(session_id)
+    await delete_session(session_id)
     return {"status": "deleted"}
 
 
