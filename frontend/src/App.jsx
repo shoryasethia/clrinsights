@@ -67,10 +67,23 @@ function App() {
   // Load sessions from backend on mount
   useEffect(() => {
     const initApp = async () => {
-      // Immediate ping to wake up the backend as fast as possible
-      fetch(apiUrl('/health')).catch(() => { })
+      // Check if backend is already awake via a timed health ping
+      let backendAlive = false
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000)
+      try {
+        const healthRes = await fetch(apiUrl('/health'), { signal: controller.signal })
+        if (healthRes.ok) backendAlive = true
+      } catch (_) {
+        // Health check timed out or failed — backend is likely cold-starting
+      } finally {
+        clearTimeout(timeout)
+      }
 
-      startWakeDetector()
+      if (!backendAlive) {
+        startWakeDetector()
+      }
+
       try {
         const res = await fetch(apiUrl('/api/sessions'))
         stopWakeDetector()
@@ -177,7 +190,6 @@ function App() {
       }
     }
 
-    startWakeDetector()
     try {
       const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
@@ -235,7 +247,6 @@ function App() {
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
-      stopWakeDetector()
       setLoading(false)
     }
   }
