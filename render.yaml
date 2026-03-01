@@ -4,7 +4,7 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -e . && pip install -r requirements.txt
     startCommand: uvicorn clrinsights.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GEMINI_API_KEY
