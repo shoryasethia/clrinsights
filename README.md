@@ -127,19 +127,19 @@ npm run dev
 
 ### MongoDB
 
-https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L5-L6
+https://github.com/shoryasethia/clrinsights/blob/196c809873f3eb115fea9a603ba7eaf56ccfd90e/.env.example#L5-L6
 
 ### LLM Models
 
-https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L8-L13
+https://github.com/shoryasethia/clrinsights/blob/196c809873f3eb115fea9a603ba7eaf56ccfd90e/.env.example#L8-L13
 
 ### Data Paths
 
-https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L15-L18
+https://github.com/shoryasethia/clrinsights/blob/196c809873f3eb115fea9a603ba7eaf56ccfd90e/.env.example#L15-L18
 
 ### API Settings
 
-https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L24-L27
+https://github.com/shoryasethia/clrinsights/blob/196c809873f3eb115fea9a603ba7eaf56ccfd90e/.env.example#L24-L27
 
 ### Additional Settings
 See `.env.example` for all available configuration options including:
