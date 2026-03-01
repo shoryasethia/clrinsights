@@ -97,10 +97,8 @@ Edit `.env` (copy from `.env.example`) and configure:
 
 **Terminal 1 - Start Backend:**
 
-You can start the backend using either Uvicorn (recommended for development) or Python directly.
+Navigate to `clrinsights` directory and run:
 
-**Option A (Uvicorn with hot-reload):**
-From the repository root (parent of `clrinsights`):
 ```powershell
 # Windows PowerShell
 .venv\Scripts\activate
@@ -113,14 +111,6 @@ uvicorn clrinsights.main:app --host 0.0.0.0 --port 8000 --reload
 source .venv/bin/activate
 cd .. 
 uvicorn clrinsights.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**Option B (Python directly):**
-From inside the `clrinsights` directory:
-```bash
-# Windows / Linux / Mac
-cd clrinsights
-python -m main
 ```
 
 **Terminal 2 - Start Frontend:**
@@ -181,3 +171,7 @@ The agent receives this schema context with every query to ensure accurate SQL g
 
 This project is licensed under the Apache License - see the [LICENSE](LICENSE) file for details.
 
+---
+<p align="center">
+  Built for Techfest IIT Bombay x NPCI Competition (InsightX) by team ClrInsights
+</p>
