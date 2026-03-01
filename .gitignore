@@ -71,3 +71,6 @@ backend/
 # Data files (large CSVs should not be in repo)
 # Uncomment below if you don't want CSV in repo:
 # ../data/
+
+# Presentation / Demo scripts
+demo_script.md
