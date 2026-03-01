@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/clrinsights-logo-bw.png" alt="CLRInsights Logo" width="200" height="auto" />
+  <img src="frontend/assets/clrinsights-logo-bw.png" alt="CLRInsights Logo" width="200" height="auto" />
   <p><strong>Conversational Leadership Reports & Insights</strong></p>
   <p>An agentic approach for querying and analyzing UPI transaction data using natural language</p>
 </div>
