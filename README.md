@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./frontend/assets/clrinsights-logo-bw.png" alt="CLRInsights Logo" width="200" height="auto" />
+  <img src="./assets/clrinsights-logo-bw.png" alt="CLRInsights Logo" width="200" height="auto" />
   <p><strong>Conversational Leadership Reports & Insights</strong></p>
   <p>An agentic approach for querying and analyzing UPI transaction data using natural language</p>
 </div>
@@ -47,7 +47,7 @@ clrinsights/
 │   │   ├── App.jsx        # Main application component
 │   │   ├── main.jsx       # React entry point
 │   │   └── index.css      # Tailwind CSS styles
-│   ├── public/assets/     # Static assets (logo)
+│   ├── assets/            # Static assets (logo — served as public dir)
 │   ├── package.json       # Node.js dependencies
 │   ├── vite.config.js     # Vite configuration
 │   └── tailwind.config.js # Tailwind CSS configuration
@@ -85,11 +85,12 @@ copy .env.example .env  # Windows
 cp .env.example .env  # Linux/Mac
 ```
 
-Edit `.env` and configure all settings:
-- **API keys** (GEMINI_API_KEY and GROQ_API_KEY) - Required
-- **Model names** - All model configurations
-- **CSV_PATH** - Path to your CSV file (relative to clrinsights directory)
-- **SCHEMA_PATH** - Path to schema.json (default: schema.json)
+Edit `.env` (copy from `.env.example`) and configure:
+- **API keys** (`GEMINI_API_KEY` and `GROQ_API_KEY`) — Required
+- **MongoDB** (`MONGODB_URI`) — Required (MongoDB Atlas free tier M0)
+- **Model names** — All model configurations
+- **CSV_PATH** — Set to `data/upi_transactions_2024.csv` (bundled in repo)
+- **SCHEMA_PATH** — Path to schema.json (default: `schema.json`)
 - All other settings (ports, timeouts, etc.)
 
 ## Usage
@@ -124,17 +125,21 @@ npm run dev
 - Frontend UI: `http://localhost:3000`
 
 
+### MongoDB
+
+https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L5-L6
+
 ### LLM Models
 
-https://github.com/shoryasethia/clrInsights/blob/601e9cb46db6b2ae0bdf49abf3b05767e8c6a8f9/.env.example#L5-L10
+https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L8-L13
 
 ### Data Paths
 
-https://github.com/shoryasethia/clrInsights/blob/601e9cb46db6b2ae0bdf49abf3b05767e8c6a8f9/.env.example#L12-L15
+https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L15-L18
 
 ### API Settings
 
-https://github.com/shoryasethia/clrInsights/blob/601e9cb46db6b2ae0bdf49abf3b05767e8c6a8f9/.env.example#L21-L24
+https://github.com/shoryasethia/clrinsights/blob/196c809/.env.example#L24-L27
 
 ### Additional Settings
 See `.env.example` for all available configuration options including:
