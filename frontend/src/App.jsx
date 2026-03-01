@@ -24,6 +24,10 @@ function App() {
     return saved ? JSON.parse(saved) : { provider: 'groq' }
   })
   const messagesEndRef = useRef(null)
+  const [backendWaking, setBackendWaking] = useState(false)
+  const [wakingSecs, setWakingSecs] = useState(0)
+  const wakeTimerRef = useRef(null)
+  const wakeIntervalRef = useRef(null)
 
   useEffect(() => {
     if (darkMode) {
@@ -42,11 +46,30 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const startWakeDetector = () => {
+    wakeTimerRef.current = setTimeout(() => {
+      setBackendWaking(true)
+      setWakingSecs(0)
+      wakeIntervalRef.current = setInterval(() => {
+        setWakingSecs(s => s + 1)
+      }, 1000)
+    }, 30000)
+  }
+
+  const stopWakeDetector = () => {
+    clearTimeout(wakeTimerRef.current)
+    clearInterval(wakeIntervalRef.current)
+    setBackendWaking(false)
+    setWakingSecs(0)
+  }
+
   // Load sessions from backend on mount
   useEffect(() => {
     const loadSessions = async () => {
+      startWakeDetector()
       try {
         const res = await fetch(apiUrl('/api/sessions'))
+        stopWakeDetector()
         if (res.ok) {
           const data = await res.json()
           if (data.sessions && data.sessions.length > 0) {
@@ -54,6 +77,7 @@ function App() {
           }
         }
       } catch (e) {
+        stopWakeDetector()
         // Backend might not be running yet, ignore
       }
     }
@@ -147,6 +171,7 @@ function App() {
       }
     }
 
+    startWakeDetector()
     try {
       const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
@@ -204,6 +229,7 @@ function App() {
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
+      stopWakeDetector()
       setLoading(false)
     }
   }
@@ -217,12 +243,28 @@ function App() {
 
   return (
     <div className="h-screen bg-gray-100 dark:bg-[#0f0f0f] transition-colors flex flex-col overflow-hidden">
+      {/* Render cold-start waking banner */}
+      {backendWaking && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-300 dark:border-amber-700 px-4 py-2.5 flex items-center gap-3 z-30">
+          <div className="relative flex-shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping absolute" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">Backend is waking up…</span>
+            <span className="text-xs text-amber-700 dark:text-amber-400 ml-2">Free tier sleeps after 15 min of inactivity. Please wait 30–50s.</span>
+          </div>
+          <span className="text-sm font-mono font-bold text-amber-700 dark:text-amber-300 flex-shrink-0 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded">
+            {wakingSecs}s
+          </span>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-white dark:bg-[#181818] border-b border-gray-200 dark:border-gray-900 z-20">
         <div className="px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
-              src="/assets/clrinsights-logo.png"
+              src="/clrinsights-logo.png"
               alt="CLRInsights"
               className="h-10 w-auto rounded-lg"
             />
