@@ -187,6 +187,16 @@ async def clear_session(session_id: str):
     return {"status": "deleted"}
 
 
+@app.delete("/sessions/{session_id}/messages/{msg_index}")
+async def delete_session_message(session_id: str, msg_index: int):
+    """Delete a message pair from a session."""
+    history = await get_or_create_session(session_id)
+    success = await history.delete_message(msg_index)
+    if not success:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"status": "deleted"}
+
+
 @app.put("/settings/keys")
 async def update_keys(body: dict):
     """Update API keys at runtime and persist to .env."""

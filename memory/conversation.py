@@ -130,6 +130,23 @@ class ConversationHistory:
     async def delete(self) -> None:
         await _col().delete_one({"session_id": self.session_id})
 
+    async def delete_message(self, index: int) -> bool:
+        """Delete a message pair from the session history."""
+        if 0 <= index < len(self.messages):
+            num_to_delete = 1
+            if self.messages[index]["role"] == "user":
+                if index + 1 < len(self.messages) and self.messages[index + 1]["role"] == "assistant":
+                    num_to_delete = 2
+            elif self.messages[index]["role"] == "assistant":
+                if index - 1 >= 0 and self.messages[index - 1]["role"] == "user":
+                    index -= 1
+                    num_to_delete = 2
+            
+            del self.messages[index:index + num_to_delete]
+            await self._save()
+            return True
+        return False
+
 
 # ---------------------------------------------------------------------------
 # In-memory cache + module-level helpers (same names as the old file-based API)

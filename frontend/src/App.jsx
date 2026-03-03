@@ -13,8 +13,10 @@ function App() {
   })
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loadingSessions, setLoadingSessions] = useState(new Set())
   const [sessionId, setSessionId] = useState(null)
+
+  const isLoading = sessionId ? loadingSessions.has(sessionId) : false;
 
   const sessionIdRef = useRef(sessionId)
   useEffect(() => {
@@ -118,12 +120,10 @@ function App() {
     setSessions(prev => [newSession, ...prev])
     setSessionId(newSession.id)
     setMessages([])
-    setLoading(false)
   }
 
   const handleSelectSession = async (id) => {
     setSessionId(id)
-    setLoading(false)
     // Load messages from backend
     try {
       const res = await fetch(apiUrl(`/api/sessions/${id}/history`))
@@ -173,15 +173,45 @@ function App() {
     }
   }
 
+  const handleDeleteMessage = async (msgIndex) => {
+    if (!sessionId) return
+    try {
+      await fetch(apiUrl(`/api/sessions/${sessionId}/messages/${msgIndex}`), { method: 'DELETE' })
+    } catch (err) {
+      console.error('[Chat] Failed to delete message from backend:', err)
+    }
+
+    setMessages(prev => {
+      const newDocs = [...prev]
+      let idx = msgIndex
+      let numToDrop = 1
+      if (newDocs[idx]) {
+        if (newDocs[idx].role === 'user') {
+          if (idx + 1 < newDocs.length && newDocs[idx + 1].role === 'assistant') {
+            numToDrop = 2
+          }
+        } else if (newDocs[idx].role === 'assistant') {
+          if (idx - 1 >= 0 && newDocs[idx - 1].role === 'user') {
+            idx -= 1
+            numToDrop = 2
+          }
+        }
+      }
+      newDocs.splice(idx, numToDrop)
+      return newDocs
+    })
+  }
+
   const sendMessage = async () => {
-    if (!input.trim() || loading) return
+    if (!input.trim() || isLoading) return
 
     const userMessage = { role: 'user', content: input }
     const currentInput = input
     const startingSessionId = sessionId
     setMessages(prev => [...prev, userMessage])
     setInput('')
-    setLoading(true)
+
+    setLoadingSessions(prev => new Set(prev).add(startingSessionId))
 
     // Auto-name session from first message (only if not manually renamed)
     if (messages.length === 0 && sessionId && !renamedSessions.has(sessionId)) {
@@ -265,9 +295,11 @@ function App() {
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
-      if (sessionIdRef.current === startingSessionId) {
-        setLoading(false)
-      }
+      setLoadingSessions(prev => {
+        const next = new Set(prev)
+        next.delete(startingSessionId)
+        return next
+      })
     }
   }
 
@@ -398,9 +430,9 @@ function App() {
               </div>
             )}
             {messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
+              <ChatMessage key={index} message={message} onDelete={() => handleDeleteMessage(index)} />
             ))}
-            {loading && (
+            {isLoading && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
                   <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
@@ -422,7 +454,7 @@ function App() {
             <InputArea
               input={input}
               setInput={setInput}
-              loading={loading}
+              loading={isLoading}
               onSend={sendMessage}
               onKeyDown={handleKeyDown}
             />

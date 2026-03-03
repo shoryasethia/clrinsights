@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { User, Bot, AlertCircle, Maximize2, Terminal, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
+import { User, Bot, AlertCircle, Maximize2, Terminal, ChevronDown, ChevronRight, Copy, Check, Trash2 } from 'lucide-react'
 import ImageViewer from './ImageViewer'
 
 function TraceCopyBtn({ text }) {
@@ -86,7 +86,7 @@ function TraceSection({ steps }) {
   )
 }
 
-export default function ChatMessage({ message }) {
+export default function ChatMessage({ message, onDelete }) {
   const isUser = message.role === 'user'
   const [viewerIndex, setViewerIndex] = useState(null)
   const [showTrace, setShowTrace] = useState(false)
@@ -122,18 +122,29 @@ export default function ChatMessage({ message }) {
       {/* Message Content */}
       <div className="flex-1 min-w-0 group/msg">
         <div className={`message-content relative ${isUser ? 'bg-primary-50 dark:bg-[#1a1a2e]' : 'bg-gray-50 dark:bg-[#141414]'}`}>
-          {/* Copy button — visible on hover */}
+          {/* Copy & Delete buttons — visible on hover */}
           {message.content && (
-            <button
-              onClick={handleCopy}
-              className="absolute top-2 right-2 p-1.5 rounded-md opacity-0 group-hover/msg:opacity-100 transition-opacity bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
-              title={copied ? 'Copied!' : 'Copy message'}
-            >
-              {copied
-                ? <Check className="w-3.5 h-3.5 text-green-500" />
-                : <Copy className="w-3.5 h-3.5" />
-              }
-            </button>
+            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+              <button
+                onClick={handleCopy}
+                className="p-1.5 rounded-md bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+                title={copied ? 'Copied!' : 'Copy message'}
+              >
+                {copied
+                  ? <Check className="w-3.5 h-3.5 text-green-500" />
+                  : <Copy className="w-3.5 h-3.5" />
+                }
+              </button>
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="p-1.5 rounded-md bg-gray-200/80 dark:bg-gray-700/80 hover:bg-red-200 dark:hover:bg-red-900/50 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
+                  title="Delete message"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           )}
 
           {/* Per-message trace toggle — above response */}
