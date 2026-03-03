@@ -285,7 +285,7 @@ function App() {
                 <span className="ml-auto font-mono text-xs font-bold">{wakingSecs}s</span>
               </div>
               <p className="text-xs text-amber-700/80 dark:text-amber-400/80 text-left">
-                The free tier sleeps after 15 minutes of inactivity. Please wait ~50 seconds for it to start.
+                The free tier sleeps after 15 minutes of inactivity. Please wait ~1-2 mins for it to start.
               </p>
             </div>
           )}
