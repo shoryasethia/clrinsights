@@ -15,6 +15,12 @@ function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState(null)
+
+  const sessionIdRef = useRef(sessionId)
+  useEffect(() => {
+    sessionIdRef.current = sessionId
+  }, [sessionId])
+
   const [showSettings, setShowSettings] = useState(false)
   const [showSidebar, setShowSidebar] = useState(true)
   const [sessions, setSessions] = useState([])
@@ -112,10 +118,12 @@ function App() {
     setSessions(prev => [newSession, ...prev])
     setSessionId(newSession.id)
     setMessages([])
+    setLoading(false)
   }
 
   const handleSelectSession = async (id) => {
     setSessionId(id)
+    setLoading(false)
     // Load messages from backend
     try {
       const res = await fetch(apiUrl(`/api/sessions/${id}/history`))
@@ -170,6 +178,7 @@ function App() {
 
     const userMessage = { role: 'user', content: input }
     const currentInput = input
+    const startingSessionId = sessionId
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setLoading(true)
@@ -211,7 +220,6 @@ function App() {
       const data = await response.json()
 
       if (data.session_id) {
-        setSessionId(data.session_id)
         // Add to session list if not present
         setSessions(prev => {
           const exists = prev.some(s => s.id === data.session_id)
@@ -220,6 +228,14 @@ function App() {
           }
           return prev
         })
+
+        if (sessionIdRef.current === startingSessionId) {
+          setSessionId(data.session_id)
+        }
+      }
+
+      if (sessionIdRef.current !== startingSessionId) {
+        return;
       }
 
       // Trace is already built by the backend in frontend-friendly format
@@ -235,6 +251,8 @@ function App() {
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
       console.error('[Chat] Request failed:', error)
+      if (sessionIdRef.current !== startingSessionId) return
+
       const userFriendly = error.message?.includes('Failed to fetch')
         ? 'Could not connect to server. Is the backend running?'
         : error.message?.includes('API Key')
@@ -247,7 +265,9 @@ function App() {
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
-      setLoading(false)
+      if (sessionIdRef.current === startingSessionId) {
+        setLoading(false)
+      }
     }
   }
 
