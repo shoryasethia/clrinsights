@@ -71,3 +71,8 @@ backend/
 # Data files (large CSVs should not be in repo)
 # Uncomment below if you don't want CSV in repo:
 # ../data/
+
+MISC/
+*.md
+!README.md
+!QUICKSTART.md
